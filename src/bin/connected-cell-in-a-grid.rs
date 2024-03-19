@@ -2,73 +2,51 @@ use std::env;
 use std::fs::File;
 use std::io::{self, BufRead, Write};
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
-struct Cell(u8, u8);
+fn connected_cell(grid: &Vec<Vec<bool>>) -> i32 {
+    let mut grid = grid.to_owned();
+    let mut max_count = 0;
 
-fn grid_get(grid: &[Vec<bool>], (i, j): (i32, i32)) -> bool {
-    if i.is_negative() || j.is_negative() {
-        return false;
+    for i in 0..grid.len() {
+        for j in 0..grid[0].len() {
+            let count = count_connected_cells(&mut grid, (i as i32, j as i32));
+            max_count = max_count.max(count);
+        }
     }
-    grid.get(i as usize)
-        .and_then(|row| row.get(j as usize))
-        .map(|&b| b)
-        .unwrap_or(false)
-}
-fn grid_get_mut(grid: &mut [Vec<bool>], (i, j): (i32, i32)) -> Option<&mut bool> {
-    if i.is_negative() || j.is_negative() {
-        return None;
-    }
-    grid.get_mut(i as usize)
-        .and_then(|row| row.get_mut(j as usize))
+    return max_count;
 }
 
-// returns whether or not the specified cell is true.
-// after the function call, the cell will be true.
-fn visit_cell(visited: &mut [Vec<bool>], (i, j): (i32, i32)) -> Option<bool> {
-    grid_get_mut(visited, (i, j)).and_then(|cell_visited| {
-        let original_value = *cell_visited;
-        *cell_visited = true;
-        Some(original_value)
-    })
-}
-
-fn find_connected_cells(grid: &[Vec<bool>], visited: &mut [Vec<bool>], (i, j): (i32, i32)) -> i32 {
-    let is_empty = !grid_get(grid, (i, j));
-    if is_empty {
+fn count_connected_cells(grid: &mut [Vec<bool>], (i, j): (i32, i32)) -> i32 {
+    if !get_cell(grid, (i, j)) {
         return 0;
     }
-    let already_visited = visit_cell(visited, (i, j)).expect("coords should be in bounds now");
-    if already_visited {
-        return 0;
-    }
+    set_cell(grid, (i, j), false);
     let mut count = 1;
     // traverse the moore neighborhood
     for x in -1..=1 {
         for y in -1..=1 {
-            if x != 0 || y != 0 {
-                let recursed = find_connected_cells(grid, visited, (i + x, j + y));
-                count += recursed;
-            }
+            count += count_connected_cells(grid, (i + x, j + y));
         }
     }
     return count;
 }
 
-fn connected_cell(grid: &Vec<Vec<bool>>) -> i32 {
-    let (rows, cols) = (grid.len(), grid[0].len());
-    let mut max_count = 0;
-    let mut visited = vec![vec![false; cols]; rows];
-    for i in 0..rows {
-        for j in 0..cols {
-            let pos = (i as i32, j as i32);
-            if grid_get(grid, pos) {
-                let count = find_connected_cells(grid, &mut visited, pos);
-                max_count = max_count.max(count);
-                println!("Loop done. Count: {count}. Max count: {max_count}");
-            }
-        }
+fn get_cell(grid: &[Vec<bool>], (i, j): (i32, i32)) -> bool {
+    if grid_bounds(grid, (i, j)) {
+        grid[i as usize][j as usize]
+    } else {
+        false
     }
-    return max_count;
+}
+fn set_cell(grid: &mut [Vec<bool>], (i, j): (i32, i32), val: bool) {
+    if grid_bounds(grid, (i, j)) {
+        grid[i as usize][j as usize] = val;
+    }
+}
+fn grid_bounds(grid: &[Vec<bool>], (i, j): (i32, i32)) -> bool {
+    !i.is_negative()
+        && !j.is_negative()
+        && (i as usize) < grid.len()
+        && (j as usize) < grid[i as usize].len()
 }
 
 fn main() {
