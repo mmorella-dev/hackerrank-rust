@@ -5,11 +5,15 @@ use std::fs::File;
 use std::io::{self, BufRead, Write};
 
 fn balanced_sums(arr: &[i32]) -> bool {
-    for i in 0..arr.len() {
-        let (left, right) = (&arr[0..i], &arr[i+1..]);
-        if left.iter().sum::<i32>() == right.iter().sum::<i32>() {
+    let mut left_sum: i32 = 0;
+    let mut right_sum: i32 = arr.iter().sum();
+
+    for n in arr {
+        left_sum += n;
+        if left_sum == right_sum {
             return true;
         }
+        right_sum -= n;
     }
     return false;
 }
