@@ -1,19 +1,21 @@
+// https://www.hackerrank.com/challenges/divisible-sum-pairs/problem?isFullScreen=true
 use std::env;
 use std::fs::File;
 use std::io::{self, BufRead, Write};
 
-/*
- * Complete the 'divisibleSumPairs' function below.
- *
- * The function is expected to return an INTEGER.
- * The function accepts following parameters:
- *  1. INTEGER n
- *  2. INTEGER k
- *  3. INTEGER_ARRAY ar
- */
-
-fn divisibleSumPairs(n: i32, k: i32, ar: &[i32]) -> i32 {
-
+/// Returns the number of unordered pairs in arr whose sums are divisible by k.
+fn divisible_sum_pairs(_n: i32, k: i32, arr: &[i32]) -> i32 {
+    let mut count = 0;
+    for i in 0..arr.len() {
+        for j in (i+1)..arr.len() {
+            let sum = arr[i] + arr[j];
+            let is_divisible = sum % k == 0;
+            if is_divisible {
+                count += 1;
+            }
+        }
+    }
+    count
 }
 
 fn main() {
@@ -37,7 +39,18 @@ fn main() {
         .map(|s| s.to_string().parse::<i32>().unwrap())
         .collect();
 
-    let result = divisibleSumPairs(n, k, &ar);
+    let result = divisible_sum_pairs(n, k, &ar);
 
     writeln!(&mut fptr, "{}", result).ok();
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::divisible_sum_pairs;
+
+    #[test]
+    fn sample_input_0() {
+        let result = divisible_sum_pairs(6, 3, &[1, 3, 2, 6, 1, 2]);
+        assert_eq!(result, 5);
+    }
 }
